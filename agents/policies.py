@@ -37,13 +37,20 @@ class CPT_Handler(object):
         R_perc = np.empty(np.shape(R))
         R_perc[ipos] = np.power(R[ipos]-b,self.gamma)
         R_perc[ineg] = -self.lam*np.power(np.abs(R[ineg]-b),self.gamma)
-        return R_perc
+        return np.nan_to_num(R_perc)
     def prob_weight(self,p):
         """ Prelec probability weighting function """
+        if np.any(p<0):
+            raise Exception('Negative probabilities found in CPT Probability transform')
         p = np.array(p).reshape([np.size(p),])
-        p[np.where(p==0)] = self.epsilon
-        p_perc = np.exp(-self.alpha*np.power(-np.log(p),self.delta))
-        return p_perc
+        # p[np.where(p==0)] = self.epsilon
+        p_perc = np.zeros(p.shape)
+        for ai in range(len(p)):
+            if p[ai] == 0: p_perc[ai]=0
+            else: p_perc[ai] = np.exp(-self.alpha*np.power(-np.log(p[ai]),self.delta))
+        # p_perc = np.exp(-self.alpha*np.power(-np.log(p),self.delta)) if p>0 else 0
+        # p_perc[np.where(p == 0)] = 0
+        return p_perc/np.sum(p_perc)#np.nan_to_num(p_perc)
     def expected_value_perc(self,R,T,si):
         """
         :param R: reward |nS|

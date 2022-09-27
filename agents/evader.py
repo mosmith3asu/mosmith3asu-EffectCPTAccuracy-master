@@ -5,7 +5,7 @@ from enviorment.utils import *
 class EvaderDM(object):
     def __init__(self,Sk):
         self.rationality = 1
-        self.rCatch = -MDP_settings['evader']['rCatch']
+        self.rCatch = -MDP_settings['evader']['Rcatch']
         self.scale_rDist = 2 # scaling factor of cumulative distance
         self.Sk = Sk
         self.idx = 2
@@ -13,6 +13,8 @@ class EvaderDM(object):
         si_dmax = np.array([[1,1,0],[1,1,0],[5,5,0]])
         self.max_rDist = 1 # initialize no max dist scaling
         self.max_rDist = self.get_rDist(si_dmax)
+
+        self.actions = np.array([[0, 0], [-1, 0], [0, 1], [1, 0], [0, -1]])  # [ wait, up, right,down, left]
 
     def get_unscaled_rDist(self,statei):
         order = 2
@@ -27,8 +29,15 @@ class EvaderDM(object):
         if is_caught(statei,self.Sk): ri = self.rCatch
         else: ri = self.scale_rDist*self.get_unscaled_rDist(statei)
         return ri
-    def get_pd(self,R):
-        return noisy_rational(R,self.rationality)
+    def get_pd(self,si):
+        Rj = np.zeros(5)
+        Sj = []
+        for ai,action in enumerate(self.actions):
+            statej = self.Sk[si]+np.array([[0,0],[0,0],action])
+            sj = np.where(self.Sk==statej,axis=(1,2)).flatten()[0]
+            Sj.append(sj)
+            Rj[ai] = self.get_reward(sj)
+        return noisy_rational(Rj,self.rationality)
     def choose(self,R):
         Ai = np.arange(np.size(R))
         pdA = self.get_pd(R)
