@@ -282,6 +282,7 @@ def objective(params,ai_obs,Rn):
     negLL = - np.sum(stats.norm.logpdf(was_accepted, pi_accept, params[-1]))
     return negLL
 
+
 def generate_uniform_test_cases(r_cert=None,r_diff=None,p_penalty=None,seed=None):
     # Define indices
     nS,nA,nO = 4,2,100
